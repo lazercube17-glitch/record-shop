@@ -1,0 +1,9 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/rss/*"
+  to = "https://a6.asurahosting.com/:splat"
+  status = 200
+  force = true
