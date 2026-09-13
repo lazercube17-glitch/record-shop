@@ -50,6 +50,41 @@ const CustomPlayer = forwardRef(function CustomPlayer(
     audio.volume = volume;
   }, [volume]);
 
+  // NEW: hook into the OS-level media controls (lock screen, Control
+  // Center, and whatever native control surface iOS/Android decide to
+  // show for an actively-playing <audio> element). Without this, those
+  // native controls have no real track info and no working buttons.
+  useEffect(() => {
+    if (!("mediaSession" in navigator) || !currentTrack) return;
+
+    const displayed = isLive ? { ...currentTrack, ...liveMetadata } : currentTrack;
+
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: displayed.title || "Record Shop Radio",
+      artist: displayed.artist || displayed.station || "",
+      album: isLive ? displayed.playlist || "" : displayed.station || "",
+      artwork: displayed.artwork
+        ? [
+            { src: displayed.artwork, sizes: "512x512", type: "image/jpeg" },
+          ]
+        : [],
+    });
+
+    navigator.mediaSession.setActionHandler("play", () => togglePlay());
+    navigator.mediaSession.setActionHandler("pause", () => togglePlay());
+    navigator.mediaSession.setActionHandler(
+      "previoustrack",
+      isLive ? null : () => onPrevious?.(),
+    );
+    navigator.mediaSession.setActionHandler(
+      "nexttrack",
+      isLive ? null : () => onNext?.(),
+    );
+    navigator.mediaSession.setActionHandler("stop", () => handleClose());
+
+    navigator.mediaSession.playbackState = playing ? "playing" : "paused";
+  }, [currentTrack?.id, liveMetadata, playing, isLive]);
+
   // NEW: report playing state up to App whenever it changes
   useEffect(() => {
     onPlayingChange?.(playing);
