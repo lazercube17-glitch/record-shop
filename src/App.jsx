@@ -3,6 +3,13 @@ import CustomPlayer from "./CustomPlayer";
 import { PlayIcon, PauseIcon } from "./icons/PlayerIcons";
 import "./App.css";
 
+// Podcasts are turned off for now (client's YouTube video takes their spot
+// on the Archive page), but the AzuraCast integration below is kept intact
+// in case it's needed again later — just flip this back to true.
+const SHOW_PODCASTS = false;
+
+const YOUTUBE_VIDEO_ID = "klBKv77BoMg";
+
 const PODCASTS = [
   {
     station: "MUTANT RADIO",
@@ -50,6 +57,11 @@ function App() {
 
   // LOAD PODCAST SETS
   useEffect(() => {
+    if (!SHOW_PODCASTS) {
+      setLoading(false);
+      return;
+    }
+
     const loadFeeds = async () => {
       try {
         setLoading(true);
@@ -268,65 +280,85 @@ function App() {
       <main className="content">
         <h1 className="page-title">Archive</h1>
 
-        <div className="filter-bar">
-          <button
-            className={`filter-btn ${activeFilter === "ALL" ? "active" : ""}`}
-            onClick={() => setActiveFilter("ALL")}
-          >
-            ALL
-          </button>
-
-          {PODCASTS.map((podcast) => (
+        {SHOW_PODCASTS && (
+          <div className="filter-bar">
             <button
-              key={podcast.station}
               className={`filter-btn ${
-                activeFilter === podcast.station ? "active" : ""
+                activeFilter === "ALL" ? "active" : ""
               }`}
-              onClick={() => setActiveFilter(podcast.station)}
+              onClick={() => setActiveFilter("ALL")}
             >
-              {podcast.station}
+              ALL
             </button>
-          ))}
-        </div>
 
-        {loading && <p>LOADING SETS...</p>}
-        {error && <p>ERROR: {error}</p>}
-
-        {!loading && !error && (
-          <div className="sets-grid">
-            {filteredSets.map((set) => (
-              <article
-                className="set-card"
-                key={set.id}
-                onClick={() => playSet(set)}
+            {PODCASTS.map((podcast) => (
+              <button
+                key={podcast.station}
+                className={`filter-btn ${
+                  activeFilter === podcast.station ? "active" : ""
+                }`}
+                onClick={() => setActiveFilter(podcast.station)}
               >
-                <div className="artwork-wrapper">
-                  {set.artwork && <img src={set.artwork} alt={set.title} />}
-                </div>
-
-                <span className="card-city">{set.station}</span>
-
-                <h2 className="card-title">{set.title}</h2>
-
-                <div className="card-footer">
-                  <span className="card-meta">{set.duration}</span>
-
-                  <button
-                    className="play-card-btn"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      playSet(set);
-                    }}
-                  >
-                    {isPlaying && currentTrack?.id === set.id ? (
-                      <PauseIcon size={16} />
-                    ) : (
-                      <PlayIcon size={16} />
-                    )}
-                  </button>
-                </div>
-              </article>
+                {podcast.station}
+              </button>
             ))}
+          </div>
+        )}
+
+        {SHOW_PODCASTS ? (
+          <>
+            {loading && <p>LOADING SETS...</p>}
+            {error && <p>ERROR: {error}</p>}
+
+            {!loading && !error && (
+              <div className="sets-grid">
+                {filteredSets.map((set) => (
+                  <article
+                    className="set-card"
+                    key={set.id}
+                    onClick={() => playSet(set)}
+                  >
+                    <div className="artwork-wrapper">
+                      {set.artwork && (
+                        <img src={set.artwork} alt={set.title} />
+                      )}
+                    </div>
+
+                    <span className="card-city">{set.station}</span>
+
+                    <h2 className="card-title">{set.title}</h2>
+
+                    <div className="card-footer">
+                      <span className="card-meta">{set.duration}</span>
+
+                      <button
+                        className="play-card-btn"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          playSet(set);
+                        }}
+                      >
+                        {isPlaying && currentTrack?.id === set.id ? (
+                          <PauseIcon size={16} />
+                        ) : (
+                          <PlayIcon size={16} />
+                        )}
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="video-wrapper">
+            <iframe
+              src={`https://www.youtube.com/embed/${YOUTUBE_VIDEO_ID}`}
+              title="Archive video"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
           </div>
         )}
       </main>
