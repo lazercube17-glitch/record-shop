@@ -251,7 +251,10 @@ function App() {
   return (
     <div className="app-container">
       <header className="navbar">
-        <div className="logo">Radio</div>
+        <div className="logo">
+          <img className="logo-icon" src="/logo.svg" alt="" />
+          <span className="logo-text">Shylo&apos;s Archive</span>
+        </div>
 
         <div className="live-header">
           <span className="live-dot">●</span>
