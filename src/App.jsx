@@ -8,7 +8,7 @@ import "./App.css";
 // in case it's needed again later — just flip this back to true.
 const SHOW_PODCASTS = false;
 
-const YOUTUBE_VIDEO_ID = "klBKv77BoMg";
+const YOUTUBE_VIDEO_IDS = ["klBKv77BoMg", "XCTaYW7f4hI"];
 
 const PODCASTS = [
   {
@@ -354,14 +354,18 @@ function App() {
             )}
           </>
         ) : (
-          <div className="video-wrapper">
-            <iframe
-              src={`https://www.youtube.com/embed/${YOUTUBE_VIDEO_ID}`}
-              title="Archive video"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
-            />
+          <div className="videos-grid">
+            {YOUTUBE_VIDEO_IDS.map((videoId) => (
+              <div className="video-wrapper" key={videoId}>
+                <iframe
+                  src={`https://www.youtube.com/embed/${videoId}`}
+                  title="Archive video"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              </div>
+            ))}
           </div>
         )}
       </main>
