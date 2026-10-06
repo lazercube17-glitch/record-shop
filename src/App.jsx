@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import CustomPlayer from "./CustomPlayer";
+import YouTubeVideo from "./YouTubeVideo";
 import { PlayIcon, PauseIcon } from "./icons/PlayerIcons";
 import "./App.css";
 
@@ -8,7 +9,7 @@ import "./App.css";
 // in case it's needed again later — just flip this back to true.
 const SHOW_PODCASTS = false;
 
-const YOUTUBE_VIDEO_IDS = ["klBKv77BoMg", "XCTaYW7f4hI"];
+const YOUTUBE_VIDEO_IDS = ["6yu8l3iR-50", "klBKv77BoMg", "XCTaYW7f4hI"];
 
 const PODCASTS = [
   {
@@ -43,6 +44,26 @@ function App() {
   const [isPlaying, setIsPlaying] = useState(false);
 
   const playerRef = useRef(null);
+  const youtubeRefs = useRef([]);
+
+  // Live radio starts playing -> pause every YouTube video on the page
+  useEffect(() => {
+    if (isPlaying && currentTrack?.type === "live") {
+      youtubeRefs.current.forEach((videoRef) => videoRef?.pause());
+    }
+  }, [isPlaying, currentTrack]);
+
+  // A YouTube video starts playing -> pause the radio, and pause every
+  // other YouTube video so sound doesn't overlap
+  const handleYouTubePlay = (startedVideoId) => {
+    playerRef.current?.pause();
+
+    YOUTUBE_VIDEO_IDS.forEach((id, index) => {
+      if (id !== startedVideoId) {
+        youtubeRefs.current[index]?.pause();
+      }
+    });
+  };
 
   const [sets, setSets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -355,14 +376,14 @@ function App() {
           </>
         ) : (
           <div className="videos-grid">
-            {YOUTUBE_VIDEO_IDS.map((videoId) => (
+            {YOUTUBE_VIDEO_IDS.map((videoId, index) => (
               <div className="video-wrapper" key={videoId}>
-                <iframe
-                  src={`https://www.youtube.com/embed/${videoId}`}
-                  title="Archive video"
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
+                <YouTubeVideo
+                  videoId={videoId}
+                  ref={(el) => {
+                    youtubeRefs.current[index] = el;
+                  }}
+                  onPlay={handleYouTubePlay}
                 />
               </div>
             ))}

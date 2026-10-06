@@ -226,6 +226,21 @@ const CustomPlayer = forwardRef(function CustomPlayer(
     if (!audio || !currentTrack) return;
 
     if (audio.paused) {
+      if (isLive) {
+        // Live streams go stale while paused — the old connection has
+        // fallen behind, so reconnect fresh instead of trying to resume it.
+        // A cache-busting query param forces a genuinely new connection
+        // instead of the browser potentially reusing/resuming the old
+        // buffered one, which is what was causing the glitch/stutter.
+        audio.pause();
+        audio.src = `${currentTrack.src}${
+          currentTrack.src.includes("?") ? "&" : "?"
+        }_=${Date.now()}`;
+        setProgress(0);
+        setDuration(0);
+        audio.load();
+      }
+
       audio
         .play()
         .then(() => {
@@ -240,9 +255,18 @@ const CustomPlayer = forwardRef(function CustomPlayer(
     }
   };
 
-  // NEW: expose togglePlay to the parent (App) via ref
+  // NEW: expose togglePlay (and a safe, non-toggling pause) to the parent
+  // (App) via ref
   useImperativeHandle(ref, () => ({
     togglePlay,
+    pause: () => {
+      const audio = audioRef.current;
+
+      if (audio && !audio.paused) {
+        audio.pause();
+        setPlaying(false);
+      }
+    },
   }));
 
   const handleTimeUpdate = () => {
@@ -428,7 +452,12 @@ const CustomPlayer = forwardRef(function CustomPlayer(
           </div>
 
           <div className="desktop-player-right">
-            {isLive && <span className="desktop-live">● LIVE</span>}
+            {isLive && (
+              <span className="desktop-live">
+                <span className="desktop-live-dot" />
+                LIVE
+              </span>
+            )}
 
             <div className="desktop-volume">
               <span className="volume-icon">🔊</span>
